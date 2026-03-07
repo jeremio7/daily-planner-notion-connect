@@ -232,7 +232,8 @@ router.post('/import', authMiddleware, async (req, res) => {
   const { date } = req.body;
   const userName = req.userName;
   try {
-    const response = await notion.databases.query({
+    // ID 필터로 먼저 시도, 결과 없으면 날짜만으로 재시도
+    let response = await notion.databases.query({
       database_id: databaseId,
       filter: {
         and: [
@@ -242,6 +243,13 @@ router.post('/import', authMiddleware, async (req, res) => {
       },
       sorts: [{ property: '시작시간', direction: 'ascending' }],
     });
+    if (response.results.length === 0) {
+      response = await notion.databases.query({
+        database_id: databaseId,
+        filter: { property: '날짜', date: { equals: date } },
+        sorts: [{ property: '시작시간', direction: 'ascending' }],
+      });
+    }
 
     const todos = [];
     const schedule = [];

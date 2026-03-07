@@ -122,20 +122,10 @@ router.post('/export', async (req, res) => {
 
   const { date, todos, schedule } = req.body;
   try {
-    const results = { created: 0, skipped: 0, errors: [] };
+    const results = { created: 0, errors: [] };
 
-    // 기존 항목 이름 목록 조회 (중복 방지)
-    const existing = await notion.databases.query({
-      database_id: databaseId,
-      filter: { property: '날짜', date: { equals: date } },
-    });
-    const existingNames = new Set(
-      existing.results.map(p => p.properties['할일']?.title?.[0]?.plain_text).filter(Boolean)
-    );
-
-    // 할일 내보내기 (중복 건너뛰기)
+    // 할일 내보내기
     for (const todo of (todos || [])) {
-      if (existingNames.has(todo.text)) { results.skipped++; continue; }
       try {
         await notion.pages.create({
           parent: { database_id: databaseId },
@@ -150,9 +140,8 @@ router.post('/export', async (req, res) => {
       }
     }
 
-    // 계획 내보내기 (중복 건너뛰기)
+    // 계획 내보내기
     for (const item of (schedule || [])) {
-      if (existingNames.has(item.text)) { results.skipped++; continue; }
       try {
         await notion.pages.create({
           parent: { database_id: databaseId },
@@ -171,10 +160,7 @@ router.post('/export', async (req, res) => {
       }
     }
 
-    const msg = results.skipped > 0
-      ? `${results.created}개 추가, ${results.skipped}개 중복 건너뜀`
-      : `${results.created}개 항목을 Notion에 내보냈습니다.`;
-    res.json({ success: true, message: msg, errors: results.errors });
+    res.json({ success: true, message: `${results.created}개 항목을 Notion에 내보냈습니다.`, errors: results.errors });
   } catch (err) {
     res.status(500).json({ error: '내보내기 실패: ' + err.message });
   }

@@ -185,7 +185,7 @@ export default function NotionSync({ dateStr, todos, schedule, onImport, canExpo
         <span className="section-title" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>
           Notion 연동
         </span>
-        <span className="notion-toggle">{open ? '접기' : '펼치기'}</span>
+        <span className="notion-toggle">{open ? '▲' : '▼'}</span>
       </div>
 
       {open && (

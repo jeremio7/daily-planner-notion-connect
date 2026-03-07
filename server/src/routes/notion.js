@@ -7,20 +7,20 @@ const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
-function getDataPath(userId) {
-  return path.join(__dirname, `../../data/planner_${userId}.json`);
+function getDataPath(emailPrefix) {
+  return path.join(__dirname, `../../data/planner_${emailPrefix}.json`);
 }
 
-function readData(userId) {
-  const dataPath = getDataPath(userId);
+function readData(emailPrefix) {
+  const dataPath = getDataPath(emailPrefix);
   if (!fs.existsSync(dataPath)) {
     fs.writeFileSync(dataPath, '{}', 'utf-8');
   }
   return JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
 }
 
-function writeData(userId, data) {
-  fs.writeFileSync(getDataPath(userId), JSON.stringify(data, null, 2), 'utf-8');
+function writeData(emailPrefix, data) {
+  fs.writeFileSync(getDataPath(emailPrefix), JSON.stringify(data, null, 2), 'utf-8');
 }
 
 // API 키: 환경변수 우선 (보안)
@@ -93,7 +93,7 @@ router.get('/search-databases', async (req, res) => {
 
     res.json({ databases });
   } catch (err) {
-    res.status(500).json({ error: 'DB 검색 실패: ' + err.message });
+    res.status(500).json({ error: 'DB 검색에 실패했습니다.' });
   }
 });
 
@@ -115,7 +115,7 @@ router.get('/search-pages', async (req, res) => {
 
     res.json({ pages });
   } catch (err) {
-    res.status(500).json({ error: '페이지 검색 실패: ' + err.message });
+    res.status(500).json({ error: '페이지 검색에 실패했습니다.' });
   }
 });
 
@@ -142,7 +142,7 @@ router.post('/create-database', async (req, res) => {
 
     res.json({ success: true, databaseId: database.id, message: 'Daily Planner 데이터베이스가 생성되었습니다.' });
   } catch (err) {
-    res.status(500).json({ error: 'DB 생성 실패: ' + err.message });
+    res.status(500).json({ error: 'DB 생성에 실패했습니다.' });
   }
 });
 
@@ -216,7 +216,7 @@ router.post('/export', authMiddleware, async (req, res) => {
 
     res.json({ success: true, message: `${results.created}개 항목을 Notion에 내보냈습니다.`, errors: results.errors });
   } catch (err) {
-    res.status(500).json({ error: '내보내기 실패: ' + err.message });
+    res.status(500).json({ error: '내보내기에 실패했습니다.' });
   }
 });
 
@@ -292,7 +292,7 @@ router.post('/import', authMiddleware, async (req, res) => {
       message: `할일 ${notionTodos.length}개, 계획 ${notionSchedule.length}개를 가져왔습니다.`,
     });
   } catch (err) {
-    res.status(500).json({ error: '가져오기 실패: ' + err.message });
+    res.status(500).json({ error: '가져오기에 실패했습니다.' });
   }
 });
 

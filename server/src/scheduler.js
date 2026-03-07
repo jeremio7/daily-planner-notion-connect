@@ -17,6 +17,17 @@ function getUserTimezone(userId) {
   }
 }
 
+function getEmailPrefix(userId) {
+  try {
+    const users = JSON.parse(fs.readFileSync(USERS_PATH, 'utf-8'));
+    const entry = Object.entries(users).find(([, u]) => u.id === userId);
+    if (!entry) return null;
+    return entry[0].split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '_');
+  } catch {
+    return null;
+  }
+}
+
 function getNowInTimezone(timezone) {
   const now = new Date();
   const str = now.toLocaleString('en-US', { timeZone: timezone });
@@ -39,7 +50,10 @@ function checkSchedules() {
   if (userIds.length === 0) return;
 
   for (const userId of userIds) {
-    const plannerPath = path.join(__dirname, `../data/planner_${userId}.json`);
+    // userId → emailPrefix 매핑 (planner 파일은 emailPrefix로 저장됨)
+    const emailPrefix = getEmailPrefix(userId);
+    if (!emailPrefix) continue;
+    const plannerPath = path.join(__dirname, `../data/planner_${emailPrefix}.json`);
     if (!fs.existsSync(plannerPath)) continue;
 
     const timezone = getUserTimezone(userId);

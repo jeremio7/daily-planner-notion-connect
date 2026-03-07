@@ -120,9 +120,20 @@ router.post('/export', async (req, res) => {
     return res.status(400).json({ error: 'Notion 연결 정보가 없습니다.' });
   }
 
-  const { date, todos, schedule } = req.body;
+  const { date, todos, schedule, mode } = req.body;
   try {
     const results = { created: 0, errors: [] };
+
+    // mode: 'replace' → 기존 항목 삭제 후 새로 추가
+    if (mode === 'replace') {
+      const existing = await notion.databases.query({
+        database_id: databaseId,
+        filter: { property: '날짜', date: { equals: date } },
+      });
+      for (const page of existing.results) {
+        await notion.pages.update({ page_id: page.id, archived: true });
+      }
+    }
 
     // 할일 내보내기
     for (const todo of (todos || [])) {

@@ -125,13 +125,14 @@ export default function NotionSync({ dateStr, todos, schedule, onImport, canExpo
     }
   };
 
-  const handleExport = async () => {
+  const handleExport = async (mode = 'append') => {
+    if (mode === 'replace' && !confirm('기존 Notion 데이터를 삭제하고 현재 데이터로 교체합니다. 계속하시겠습니까?')) return;
     setBusy(true);
     setError('');
     setMessage('');
     try {
       const { data } = await axios.post(`${API}/api/notion/export`, {
-        date: dateStr, todos, schedule, databaseId: dbId,
+        date: dateStr, todos, schedule, databaseId: dbId, mode,
       }, { headers: headers() });
       setMessage(data.message);
       if (data.errors?.length) {
@@ -252,10 +253,18 @@ export default function NotionSync({ dateStr, todos, schedule, onImport, canExpo
 
           {step === 'ready' && (
             <div className="notion-actions">
+              {!canExport && (
+                <p className="notion-desc">모든 할일을 배정하면 내보내기가 활성화됩니다.</p>
+              )}
               <div className="notion-btn-row">
-                <button className="btn btn-notion" onClick={handleExport} disabled={busy || !canExport}>
-                  {busy ? '처리중...' : !canExport ? '모든 할일을 배정하세요' : 'Notion에 내보내기'}
+                <button className="btn btn-notion" onClick={() => handleExport('append')} disabled={busy || !canExport}>
+                  {busy ? '처리중...' : '추가 내보내기'}
                 </button>
+                <button className="btn btn-notion-replace" onClick={() => handleExport('replace')} disabled={busy || !canExport}>
+                  {busy ? '처리중...' : '덮어쓰기'}
+                </button>
+              </div>
+              <div className="notion-btn-row">
                 <button className="btn btn-notion-secondary" onClick={handleImport} disabled={busy}>
                   {busy ? '처리중...' : 'Notion에서 가져오기'}
                 </button>

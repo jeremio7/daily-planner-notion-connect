@@ -103,15 +103,6 @@ router.post('/create-database', async (req, res) => {
         '종료시간': { rich_text: {} },
         '완료': { checkbox: {} },
         '별점': { number: {} },
-        '상태': {
-          status: {
-            options: [
-              { name: '할일', color: 'blue' },
-              { name: '계획', color: 'green' },
-              { name: '완료', color: 'gray' },
-            ],
-          },
-        },
       },
     });
 
@@ -150,7 +141,6 @@ router.post('/export', async (req, res) => {
           properties: {
             '할일': { title: [{ text: { content: todo.text } }] },
             '날짜': { date: { start: date } },
-            '상태': { status: { name: '할일' } },
           },
         });
         results.created++;
@@ -171,7 +161,6 @@ router.post('/export', async (req, res) => {
             '종료시간': { rich_text: [{ text: { content: item.endTime } }] },
             '완료': { checkbox: !!item.done },
             '별점': { number: item.rating || 0 },
-            '상태': { status: { name: item.done ? '완료' : '계획' } },
           },
         });
         results.created++;
@@ -212,11 +201,9 @@ router.post('/import', async (req, res) => {
       const endTime = props['종료시간']?.rich_text?.[0]?.plain_text || '';
       const done = props['완료']?.checkbox || false;
       const rating = props['별점']?.number || 0;
-      const status = props['상태']?.status?.name || props['상태']?.select?.name || '할일';
-
       if (!text) continue;
 
-      if (status === '할일' || (!startTime && !endTime)) {
+      if (!startTime && !endTime) {
         todos.push({ text });
       } else {
         schedule.push({ text, startTime, endTime, done, rating });

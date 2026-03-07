@@ -9,6 +9,10 @@ const router = express.Router();
 // 인증 미들웨어 적용
 router.use(authMiddleware);
 
+function isValidDate(date) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(date);
+}
+
 function getDataPath(emailPrefix) {
   return path.join(__dirname, `../../data/planner_${emailPrefix}.json`);
 }
@@ -38,6 +42,12 @@ function getDateData(emailPrefix, date) {
   }
   return data[date];
 }
+
+// 날짜 파라미터 검증 미들웨어
+router.param('date', (req, res, next, date) => {
+  if (!isValidDate(date)) return res.status(400).json({ error: '올바른 날짜 형식이 아닙니다 (YYYY-MM-DD).' });
+  next();
+});
 
 // GET /api/planner/:date
 router.get('/:date', (req, res) => {

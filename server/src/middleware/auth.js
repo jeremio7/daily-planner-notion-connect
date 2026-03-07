@@ -12,7 +12,7 @@ function authMiddleware(req, res, next) {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.userId = decoded.userId;
     req.userEmail = decoded.email;
-    req.emailPrefix = decoded.email.split('@')[0];
+    req.emailPrefix = decoded.email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '_');
     req.userName = decoded.name || decoded.email.split('@')[0];
     next();
   } catch {

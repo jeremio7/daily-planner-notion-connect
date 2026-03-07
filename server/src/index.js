@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 
@@ -25,6 +26,7 @@ app.use(helmet({
 }));
 app.use(cors({ origin: isProd ? false : 'http://localhost:5173' }));
 app.use(express.json({ limit: '1mb' }));
+app.use('/api/', rateLimit({ windowMs: 60 * 1000, max: 100, message: { error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' } }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/planner', plannerRoutes);

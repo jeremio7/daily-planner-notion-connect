@@ -98,7 +98,7 @@ router.post('/register', async (req, res) => {
   writeUsers(users);
 
   // 이메일 prefix 기반 planner 데이터 파일 생성 (없을 때만)
-  const emailPrefix = email.split('@')[0];
+  const emailPrefix = email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '_');
   const plannerPath = path.join(__dirname, `../../data/planner_${emailPrefix}.json`);
   if (!fs.existsSync(plannerPath)) {
     fs.writeFileSync(plannerPath, '{}', 'utf-8');

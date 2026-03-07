@@ -121,6 +121,7 @@ function PlannerApp({ user, onLogout }) {
               todos={todos}
               schedule={schedule}
               onImport={() => refreshData()}
+              canExport={todos.length === 0 && deleted.length === 0 && schedule.length > 0}
             />
           </>
         )}

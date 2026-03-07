@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const API = import.meta.env.VITE_API_URL || '';
 
-export default function NotionSync({ dateStr, todos, schedule, onImport }) {
+export default function NotionSync({ dateStr, todos, schedule, onImport, canExport }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState('loading'); // loading, connect, select-db, select-page, ready
   const [apiKey, setApiKey] = useState('');
@@ -253,8 +253,8 @@ export default function NotionSync({ dateStr, todos, schedule, onImport }) {
           {step === 'ready' && (
             <div className="notion-actions">
               <div className="notion-btn-row">
-                <button className="btn btn-notion" onClick={handleExport} disabled={busy}>
-                  {busy ? '처리중...' : 'Notion에 내보내기'}
+                <button className="btn btn-notion" onClick={handleExport} disabled={busy || !canExport}>
+                  {busy ? '처리중...' : !canExport ? '모든 할일을 배정하세요' : 'Notion에 내보내기'}
                 </button>
                 <button className="btn btn-notion-secondary" onClick={handleImport} disabled={busy}>
                   {busy ? '처리중...' : 'Notion에서 가져오기'}

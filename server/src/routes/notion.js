@@ -118,6 +118,7 @@ router.post('/create-database', async (req, res) => {
       title: [{ type: 'text', text: { content: 'Daily Planner' } }],
       properties: {
         '할일': { title: {} },
+        'ID': { rich_text: {} },
         '날짜': { date: {} },
         '시작시간': { rich_text: {} },
         '종료시간': { rich_text: {} },
@@ -132,8 +133,8 @@ router.post('/create-database', async (req, res) => {
   }
 });
 
-// POST /api/notion/export - 내보내기
-router.post('/export', async (req, res) => {
+// POST /api/notion/export - 내보내기 (인증 필요 - ID 기반)
+router.post('/export', authMiddleware, async (req, res) => {
   const notion = getNotionClient(req);
   const databaseId = getDbId(req);
   if (!notion || !databaseId) {
@@ -141,14 +142,20 @@ router.post('/export', async (req, res) => {
   }
 
   const { date, todos, schedule, mode } = req.body;
+  const userName = req.userName;
   try {
     const results = { created: 0, errors: [] };
 
-    // mode: 'replace' → 기존 항목 삭제 후 새로 추가
+    // mode: 'replace' → 해당 ID의 기존 항목만 삭제 후 새로 추가
     if (mode === 'replace') {
       const existing = await notion.databases.query({
         database_id: databaseId,
-        filter: { property: '날짜', date: { equals: date } },
+        filter: {
+          and: [
+            { property: '날짜', date: { equals: date } },
+            { property: 'ID', rich_text: { equals: userName } },
+          ],
+        },
       });
       for (const page of existing.results) {
         await notion.pages.update({ page_id: page.id, archived: true });
@@ -162,6 +169,7 @@ router.post('/export', async (req, res) => {
           parent: { database_id: databaseId },
           properties: {
             '할일': { title: [{ text: { content: todo.text } }] },
+            'ID': { rich_text: [{ text: { content: userName } }] },
             '날짜': { date: { start: date } },
           },
         });
@@ -178,6 +186,7 @@ router.post('/export', async (req, res) => {
           parent: { database_id: databaseId },
           properties: {
             '할일': { title: [{ text: { content: item.text } }] },
+            'ID': { rich_text: [{ text: { content: userName } }] },
             '날짜': { date: { start: date } },
             '시작시간': { rich_text: [{ text: { content: item.startTime } }] },
             '종료시간': { rich_text: [{ text: { content: item.endTime } }] },
@@ -206,10 +215,16 @@ router.post('/import', authMiddleware, async (req, res) => {
   }
 
   const { date } = req.body;
+  const userName = req.userName;
   try {
     const response = await notion.databases.query({
       database_id: databaseId,
-      filter: { property: '날짜', date: { equals: date } },
+      filter: {
+        and: [
+          { property: '날짜', date: { equals: date } },
+          { property: 'ID', rich_text: { equals: userName } },
+        ],
+      },
       sorts: [{ property: '시작시간', direction: 'ascending' }],
     });
 

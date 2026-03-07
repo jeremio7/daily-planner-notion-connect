@@ -104,7 +104,7 @@ router.post('/register', async (req, res) => {
     fs.writeFileSync(plannerPath, '{}', 'utf-8');
   }
 
-  const token = jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '30d' });
+  const token = jwt.sign({ userId, email, name: displayName }, JWT_SECRET, { expiresIn: '30d' });
   res.status(201).json({ token, user: { id: userId, email, name: displayName } });
 });
 
@@ -140,7 +140,7 @@ router.post('/login', async (req, res) => {
     user.timezone = timezone;
     writeUsers(users);
   }
-  const token = jwt.sign({ userId: user.id, email }, JWT_SECRET, { expiresIn: '30d' });
+  const token = jwt.sign({ userId: user.id, email, name: user.name }, JWT_SECRET, { expiresIn: '30d' });
   res.json({ token, user: { id: user.id, email, name: user.name } });
 });
 

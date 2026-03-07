@@ -27,14 +27,8 @@ export default function NotionSync({ dateStr, todos, schedule, onImport }) {
     (async () => {
       try {
         const { data } = await axios.get(`${API}/api/notion/env-status`);
-        if (data.autoConnected) {
-          setEnvAuto(true);
-          setStep('ready');
-          return;
-        }
         if (data.hasKey) {
           setEnvAuto(true);
-          // 키는 서버에 있으니 DB만 찾으면 됨
           const saved = localStorage.getItem('notionDbId');
           if (saved) {
             setDbId(saved);

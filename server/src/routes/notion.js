@@ -3,7 +3,7 @@ const { Client } = require('@notionhq/client');
 
 const router = express.Router();
 
-// 환경변수 우선, 없으면 클라이언트 헤더 사용
+// API 키: 환경변수 우선 (보안)
 function getApiKey(req) {
   return process.env.NOTION_API_KEY || req.headers['x-notion-key'] || null;
 }
@@ -14,8 +14,9 @@ function getNotionClient(req) {
   return new Client({ auth: apiKey });
 }
 
+// DB ID: 클라이언트 선택 우선 (유연성)
 function getDbId(req) {
-  return process.env.NOTION_DB_ID || req.headers['x-notion-db'] || req.body?.databaseId || null;
+  return req.headers['x-notion-db'] || req.body?.databaseId || process.env.NOTION_DB_ID || null;
 }
 
 // GET /api/notion/env-status - 환경변수 설정 여부 확인

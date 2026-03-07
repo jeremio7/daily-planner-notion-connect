@@ -1,0 +1,20 @@
+{
+  "name": "daily-planner",
+  "version": "1.0.0",
+  "description": "Daily Planner - 할일 계획표 앱",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm run dev",
+    "build": "npm install --include=dev && cd server && npm install && cd ../client && npm install --include=dev && npm run build",
+    "start": "NODE_ENV=production node server/src/index.js",
+    "prod": "npm run build && npm run start",
+    "install-all": "npm install && cd server && npm install && cd ../client && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

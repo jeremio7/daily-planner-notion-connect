@@ -229,7 +229,7 @@ router.post('/import', authMiddleware, async (req, res) => {
   }
   await ensureIdProperty(notion, databaseId);
 
-  const { date } = req.body;
+  const { date, mode } = req.body;
   const userName = req.userName;
   try {
     // ID 필터로 먼저 시도, 결과 없으면 날짜만으로 재시도
@@ -251,8 +251,8 @@ router.post('/import', authMiddleware, async (req, res) => {
       });
     }
 
-    const todos = [];
-    const schedule = [];
+    const notionTodos = [];
+    const notionSchedule = [];
 
     for (const page of response.results) {
       const props = page.properties;
@@ -264,20 +264,32 @@ router.post('/import', authMiddleware, async (req, res) => {
       if (!text) continue;
 
       if (!startTime && !endTime) {
-        todos.push({ id: uuidv4(), text });
+        notionTodos.push({ id: uuidv4(), text });
       } else {
-        schedule.push({ id: uuidv4(), text, startTime, endTime, done, rating });
+        notionSchedule.push({ id: uuidv4(), text, startTime, endTime, done, rating });
       }
     }
 
     // planner 저장소에 저장
     const data = readData(req.emailPrefix);
-    data[date] = { todos, schedule, deleted: [] };
+    if (mode === 'replace') {
+      // 새로입력: Notion 데이터로 대체
+      data[date] = { todos: notionTodos, schedule: notionSchedule, deleted: [] };
+    } else {
+      // 가져오기: 기존 데이터에 추가 (중복 허용)
+      if (!data[date]) data[date] = { todos: [], schedule: [], deleted: [] };
+      data[date].todos.push(...notionTodos);
+      data[date].schedule.push(...notionSchedule);
+      data[date].schedule.sort((a, b) => a.startTime.localeCompare(b.startTime));
+    }
     writeData(req.emailPrefix, data);
+
+    const todos = data[date].todos;
+    const schedule = data[date].schedule;
 
     res.json({
       success: true, date, todos, schedule,
-      message: `할일 ${todos.length}개, 계획 ${schedule.length}개를 가져왔습니다.`,
+      message: `할일 ${notionTodos.length}개, 계획 ${notionSchedule.length}개를 가져왔습니다.`,
     });
   } catch (err) {
     res.status(500).json({ error: '가져오기 실패: ' + err.message });

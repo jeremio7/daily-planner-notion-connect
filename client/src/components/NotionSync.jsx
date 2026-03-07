@@ -145,13 +145,14 @@ export default function NotionSync({ dateStr, todos, schedule, onImport, canExpo
     }
   };
 
-  const handleImport = async () => {
+  const handleImport = async (mode = 'append') => {
+    if (mode === 'replace' && !confirm('로컬 데이터를 Notion 데이터로 교체합니다. 계속하시겠습니까?')) return;
     setBusy(true);
     setError('');
     setMessage('');
     try {
       const { data } = await axios.post(`${API}/api/notion/import`, {
-        date: dateStr, databaseId: dbId,
+        date: dateStr, databaseId: dbId, mode,
       }, { headers: headers() });
       setMessage(data.message);
       if (onImport && data.success) {
@@ -265,8 +266,11 @@ export default function NotionSync({ dateStr, todos, schedule, onImport, canExpo
                 </button>
               </div>
               <div className="notion-btn-row">
-                <button className="btn btn-notion-secondary" onClick={handleImport} disabled={busy}>
-                  {busy ? '처리중...' : 'Notion에서 가져오기'}
+                <button className="btn btn-notion-secondary" onClick={() => handleImport('append')} disabled={busy}>
+                  {busy ? '처리중...' : '가져오기'}
+                </button>
+                <button className="btn btn-notion-secondary" onClick={() => handleImport('replace')} disabled={busy}>
+                  {busy ? '처리중...' : '새로입력'}
                 </button>
               </div>
               <button className="btn-notion-disconnect" onClick={disconnect}>

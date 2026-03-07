@@ -1452,9 +1452,9 @@ body.dark .btn-add-more:hover {
 }
 
 .btn-notion-secondary {
-  background: #F8F9FA;
+  background: #ccc;
   color: #333;
-  border: 1px solid #E8ECF0;
+  border: 1px solid #bbb;
   padding: 10px 20px;
   border-radius: 10px;
   font-size: 0.9rem;
@@ -1465,7 +1465,7 @@ body.dark .btn-add-more:hover {
 }
 
 .btn-notion-secondary:hover:not(:disabled) {
-  background: #E8ECF0;
+  background: #bbb;
 }
 
 .btn-notion-secondary:disabled {

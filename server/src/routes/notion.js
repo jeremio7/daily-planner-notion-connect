@@ -39,6 +39,19 @@ function getDbId(req) {
   return req.headers['x-notion-db'] || req.body?.databaseId || process.env.NOTION_DB_ID || null;
 }
 
+// 기존 DB에 ID 속성이 없으면 자동 추가
+async function ensureIdProperty(notion, databaseId) {
+  try {
+    const db = await notion.databases.retrieve({ database_id: databaseId });
+    if (!db.properties['ID']) {
+      await notion.databases.update({
+        database_id: databaseId,
+        properties: { 'ID': { rich_text: {} } },
+      });
+    }
+  } catch {}
+}
+
 // GET /api/notion/env-status - 환경변수 설정 여부 확인
 router.get('/env-status', (req, res) => {
   const hasKey = !!process.env.NOTION_API_KEY;
@@ -140,6 +153,7 @@ router.post('/export', authMiddleware, async (req, res) => {
   if (!notion || !databaseId) {
     return res.status(400).json({ error: 'Notion 연결 정보가 없습니다.' });
   }
+  await ensureIdProperty(notion, databaseId);
 
   const { date, todos, schedule, mode } = req.body;
   const userName = req.userName;
@@ -213,6 +227,7 @@ router.post('/import', authMiddleware, async (req, res) => {
   if (!notion || !databaseId) {
     return res.status(400).json({ error: 'Notion 연결 정보가 없습니다.' });
   }
+  await ensureIdProperty(notion, databaseId);
 
   const { date } = req.body;
   const userName = req.userName;

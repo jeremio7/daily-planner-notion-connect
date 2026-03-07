@@ -97,9 +97,12 @@ router.post('/register', async (req, res) => {
   };
   writeUsers(users);
 
-  // 사용자별 planner 데이터 파일 생성
-  const plannerPath = path.join(__dirname, `../../data/planner_${userId}.json`);
-  fs.writeFileSync(plannerPath, '{}', 'utf-8');
+  // 이메일 prefix 기반 planner 데이터 파일 생성 (없을 때만)
+  const emailPrefix = email.split('@')[0];
+  const plannerPath = path.join(__dirname, `../../data/planner_${emailPrefix}.json`);
+  if (!fs.existsSync(plannerPath)) {
+    fs.writeFileSync(plannerPath, '{}', 'utf-8');
+  }
 
   const token = jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '30d' });
   res.status(201).json({ token, user: { id: userId, email, name: displayName } });

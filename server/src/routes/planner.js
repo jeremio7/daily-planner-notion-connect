@@ -9,12 +9,12 @@ const router = express.Router();
 // 인증 미들웨어 적용
 router.use(authMiddleware);
 
-function getDataPath(userId) {
-  return path.join(__dirname, `../../data/planner_${userId}.json`);
+function getDataPath(emailPrefix) {
+  return path.join(__dirname, `../../data/planner_${emailPrefix}.json`);
 }
 
-function readData(userId) {
-  const dataPath = getDataPath(userId);
+function readData(emailPrefix) {
+  const dataPath = getDataPath(emailPrefix);
   if (!fs.existsSync(dataPath)) {
     fs.writeFileSync(dataPath, '{}', 'utf-8');
   }
@@ -22,19 +22,19 @@ function readData(userId) {
   return JSON.parse(raw);
 }
 
-function writeData(userId, data) {
-  fs.writeFileSync(getDataPath(userId), JSON.stringify(data, null, 2), 'utf-8');
+function writeData(emailPrefix, data) {
+  fs.writeFileSync(getDataPath(emailPrefix), JSON.stringify(data, null, 2), 'utf-8');
 }
 
-function getDateData(userId, date) {
-  const data = readData(userId);
+function getDateData(emailPrefix, date) {
+  const data = readData(emailPrefix);
   if (!data[date]) {
     data[date] = { todos: [], schedule: [], deleted: [] };
-    writeData(userId, data);
+    writeData(emailPrefix, data);
   }
   if (!data[date].deleted) {
     data[date].deleted = [];
-    writeData(userId, data);
+    writeData(emailPrefix, data);
   }
   return data[date];
 }
@@ -42,7 +42,7 @@ function getDateData(userId, date) {
 // GET /api/planner/:date
 router.get('/:date', (req, res) => {
   const { date } = req.params;
-  const dateData = getDateData(req.userId, date);
+  const dateData = getDateData(req.emailPrefix, date);
   res.json(dateData);
 });
 
@@ -58,12 +58,12 @@ router.post('/:date/todos', (req, res) => {
     return res.status(400).json({ error: '할일은 100자 이내로 입력해주세요.' });
   }
 
-  const data = readData(req.userId);
+  const data = readData(req.emailPrefix);
   if (!data[date]) data[date] = { todos: [], schedule: [], deleted: [] };
 
   const todo = { id: uuidv4(), text: text.trim() };
   data[date].todos.push(todo);
-  writeData(req.userId, data);
+  writeData(req.emailPrefix, data);
 
   res.status(201).json(todo);
 });
@@ -71,7 +71,7 @@ router.post('/:date/todos', (req, res) => {
 // DELETE /api/planner/:date/todos/:id
 router.delete('/:date/todos/:id', (req, res) => {
   const { date, id } = req.params;
-  const data = readData(req.userId);
+  const data = readData(req.emailPrefix);
 
   if (!data[date]) return res.status(404).json({ error: '날짜를 찾을 수 없습니다.' });
 
@@ -79,7 +79,7 @@ router.delete('/:date/todos/:id', (req, res) => {
   if (idx === -1) return res.status(404).json({ error: '할일을 찾을 수 없습니다.' });
 
   data[date].todos.splice(idx, 1);
-  writeData(req.userId, data);
+  writeData(req.emailPrefix, data);
 
   res.json({ success: true });
 });
@@ -96,7 +96,7 @@ router.post('/:date/schedule', (req, res) => {
     return res.status(400).json({ error: '종료시간은 시작시간보다 뒤여야 합니다.' });
   }
 
-  const data = readData(req.userId);
+  const data = readData(req.emailPrefix);
   if (!data[date]) return res.status(404).json({ error: '날짜를 찾을 수 없습니다.' });
 
   const todoIdx = data[date].todos.findIndex(t => t.id === todoId);
@@ -118,7 +118,7 @@ router.post('/:date/schedule', (req, res) => {
   data[date].schedule.push(scheduleItem);
   // 시작시간 기준 정렬
   data[date].schedule.sort((a, b) => a.startTime.localeCompare(b.startTime));
-  writeData(req.userId, data);
+  writeData(req.emailPrefix, data);
 
   res.status(201).json(data[date]);
 });
@@ -128,7 +128,7 @@ router.patch('/:date/schedule/:id', (req, res) => {
   const { date, id } = req.params;
   const { done, rating, startTime, endTime } = req.body;
 
-  const data = readData(req.userId);
+  const data = readData(req.emailPrefix);
   if (!data[date]) return res.status(404).json({ error: '날짜를 찾을 수 없습니다.' });
 
   const item = data[date].schedule.find(s => s.id === id);
@@ -142,7 +142,7 @@ router.patch('/:date/schedule/:id', (req, res) => {
     item.endTime = endTime;
     data[date].schedule.sort((a, b) => a.startTime.localeCompare(b.startTime));
   }
-  writeData(req.userId, data);
+  writeData(req.emailPrefix, data);
 
   res.json(data[date]);
 });
@@ -150,7 +150,7 @@ router.patch('/:date/schedule/:id', (req, res) => {
 // DELETE /api/planner/:date/schedule/:id
 router.delete('/:date/schedule/:id', (req, res) => {
   const { date, id } = req.params;
-  const data = readData(req.userId);
+  const data = readData(req.emailPrefix);
 
   if (!data[date]) return res.status(404).json({ error: '날짜를 찾을 수 없습니다.' });
 
@@ -161,7 +161,7 @@ router.delete('/:date/schedule/:id', (req, res) => {
   // 삭제항목으로 이동
   if (!data[date].deleted) data[date].deleted = [];
   data[date].deleted.push({ id: removed.id, text: removed.text, startTime: removed.startTime, endTime: removed.endTime });
-  writeData(req.userId, data);
+  writeData(req.emailPrefix, data);
 
   res.json(data[date]);
 });
@@ -173,7 +173,7 @@ router.post('/:date/schedule/swap', (req, res) => {
 
   if (!dragId || !dropId) return res.status(400).json({ error: '필수 필드가 누락되었습니다.' });
 
-  const data = readData(req.userId);
+  const data = readData(req.emailPrefix);
   if (!data[date]) return res.status(404).json({ error: '날짜를 찾을 수 없습니다.' });
 
   const dragItem = data[date].schedule.find(s => s.id === dragId);
@@ -190,7 +190,7 @@ router.post('/:date/schedule/swap', (req, res) => {
 
   // 시간순 재정렬
   data[date].schedule.sort((a, b) => a.startTime.localeCompare(b.startTime));
-  writeData(req.userId, data);
+  writeData(req.emailPrefix, data);
 
   res.json(data[date]);
 });
@@ -201,7 +201,7 @@ router.post('/:date/schedule/auto', (req, res) => {
   const { slotMinutes } = req.body; // 한 슬롯 길이 (기본 60분)
   const slot = slotMinutes || 60;
 
-  const data = readData(req.userId);
+  const data = readData(req.emailPrefix);
   if (!data[date]) return res.status(404).json({ error: '날짜를 찾을 수 없습니다.' });
   if (data[date].todos.length === 0) return res.status(400).json({ error: '배정할 할일이 없습니다.' });
 
@@ -258,7 +258,7 @@ router.post('/:date/schedule/auto', (req, res) => {
   data[date].todos = data[date].todos.filter(t => !assigned.includes(t.id));
   // 시간순 정렬
   data[date].schedule.sort((a, b) => a.startTime.localeCompare(b.startTime));
-  writeData(req.userId, data);
+  writeData(req.emailPrefix, data);
 
   res.json(data[date]);
 });
@@ -283,7 +283,7 @@ router.get('/:date/week', (req, res) => {
   const mondayOffset = day === 0 ? -6 : 1 - day;
   const monday = new Date(parts[0], parts[1] - 1, parts[2] + mondayOffset);
 
-  const data = readData(req.userId);
+  const data = readData(req.emailPrefix);
   const days = [];
   for (let i = 0; i < 7; i++) {
     const cur = new Date(monday);
@@ -304,12 +304,12 @@ router.get('/:date/week', (req, res) => {
 // DELETE /api/planner/:date/deleted
 router.delete('/:date/deleted', (req, res) => {
   const { date } = req.params;
-  const data = readData(req.userId);
+  const data = readData(req.emailPrefix);
 
   if (!data[date]) return res.status(404).json({ error: '날짜를 찾을 수 없습니다.' });
 
   data[date].deleted = [];
-  writeData(req.userId, data);
+  writeData(req.emailPrefix, data);
 
   res.json(data[date]);
 });
@@ -317,7 +317,7 @@ router.delete('/:date/deleted', (req, res) => {
 // POST /api/planner/:date/deleted/:id/restore - 개별 삭제항목을 할일목록으로 복원
 router.post('/:date/deleted/:id/restore', (req, res) => {
   const { date, id } = req.params;
-  const data = readData(req.userId);
+  const data = readData(req.emailPrefix);
 
   if (!data[date]) return res.status(404).json({ error: '날짜를 찾을 수 없습니다.' });
 
@@ -326,7 +326,7 @@ router.post('/:date/deleted/:id/restore', (req, res) => {
 
   const item = data[date].deleted.splice(idx, 1)[0];
   data[date].todos.push({ id: item.id, text: item.text });
-  writeData(req.userId, data);
+  writeData(req.emailPrefix, data);
 
   res.json(data[date]);
 });
@@ -334,7 +334,7 @@ router.post('/:date/deleted/:id/restore', (req, res) => {
 // DELETE /api/planner/:date/deleted/:id - 개별 삭제항목 완전 제거
 router.delete('/:date/deleted/:id', (req, res) => {
   const { date, id } = req.params;
-  const data = readData(req.userId);
+  const data = readData(req.emailPrefix);
 
   if (!data[date]) return res.status(404).json({ error: '날짜를 찾을 수 없습니다.' });
 
@@ -342,7 +342,7 @@ router.delete('/:date/deleted/:id', (req, res) => {
   if (idx === -1) return res.status(404).json({ error: '항목을 찾을 수 없습니다.' });
 
   data[date].deleted.splice(idx, 1);
-  writeData(req.userId, data);
+  writeData(req.emailPrefix, data);
 
   res.json(data[date]);
 });

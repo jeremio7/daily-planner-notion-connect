@@ -233,9 +233,9 @@ router.post('/import', authMiddleware, async (req, res) => {
     }
 
     // planner 저장소에 저장
-    const data = readData(req.userId);
+    const data = readData(req.emailPrefix);
     data[date] = { todos, schedule, deleted: [] };
-    writeData(req.userId, data);
+    writeData(req.emailPrefix, data);
 
     res.json({
       success: true, date, todos, schedule,

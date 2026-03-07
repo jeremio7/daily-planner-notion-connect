@@ -1,7 +1,27 @@
 const express = require('express');
 const { Client } = require('@notionhq/client');
+const fs = require('fs');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
+
+function getDataPath(userId) {
+  return path.join(__dirname, `../../data/planner_${userId}.json`);
+}
+
+function readData(userId) {
+  const dataPath = getDataPath(userId);
+  if (!fs.existsSync(dataPath)) {
+    fs.writeFileSync(dataPath, '{}', 'utf-8');
+  }
+  return JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+}
+
+function writeData(userId, data) {
+  fs.writeFileSync(getDataPath(userId), JSON.stringify(data, null, 2), 'utf-8');
+}
 
 // API 키: 환경변수 우선 (보안)
 function getApiKey(req) {
@@ -177,8 +197,8 @@ router.post('/export', async (req, res) => {
   }
 });
 
-// POST /api/notion/import - 가져오기
-router.post('/import', async (req, res) => {
+// POST /api/notion/import - 가져오기 (인증 필요 - planner 저장)
+router.post('/import', authMiddleware, async (req, res) => {
   const notion = getNotionClient(req);
   const databaseId = getDbId(req);
   if (!notion || !databaseId) {
@@ -206,11 +226,16 @@ router.post('/import', async (req, res) => {
       if (!text) continue;
 
       if (!startTime && !endTime) {
-        todos.push({ text });
+        todos.push({ id: uuidv4(), text });
       } else {
-        schedule.push({ text, startTime, endTime, done, rating });
+        schedule.push({ id: uuidv4(), text, startTime, endTime, done, rating });
       }
     }
+
+    // planner 저장소에 저장
+    const data = readData(req.userId);
+    data[date] = { todos, schedule, deleted: [] };
+    writeData(req.userId, data);
 
     res.json({
       success: true, date, todos, schedule,

@@ -258,10 +258,10 @@ export default function NotionSync({ dateStr, todos, schedule, onImport, canExpo
               )}
               <div className="notion-btn-row">
                 <button className="btn btn-notion" onClick={() => handleExport('append')} disabled={busy || !canExport}>
-                  {busy ? '처리중...' : '추가 내보내기'}
+                  {busy ? '처리중...' : '내보내기'}
                 </button>
-                <button className="btn btn-notion-replace" onClick={() => handleExport('replace')} disabled={busy || !canExport}>
-                  {busy ? '처리중...' : '덮어쓰기'}
+                <button className="btn btn-notion" onClick={() => handleExport('replace')} disabled={busy || !canExport}>
+                  {busy ? '처리중...' : '새로갱신'}
                 </button>
               </div>
               <div className="notion-btn-row">

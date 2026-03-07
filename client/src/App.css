@@ -1622,35 +1622,6 @@ body.dark .notion-toggle {
   color: #666;
 }
 
-.btn-notion-replace {
-  background: #E74C3C;
-  color: #fff;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: 'Noto Sans KR', sans-serif;
-  transition: background 0.2s;
-}
-
-.btn-notion-replace:hover:not(:disabled) {
-  background: #C0392B;
-}
-
-.btn-notion-replace:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-body.dark .btn-notion-replace {
-  background: #C0392B;
-}
-
-body.dark .btn-notion-replace:hover:not(:disabled) {
-  background: #E74C3C;
-}
 
 /* Mobile */
 /* PC / Wide screen */

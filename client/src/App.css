@@ -809,6 +809,59 @@ body {
   color: #999;
 }
 
+/* Clock & Completion Layout */
+.clock-and-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.clock-chart {
+  text-align: center;
+  flex: 3;
+  min-width: 0;
+}
+
+.clock-chart svg {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+}
+
+.completion-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  flex: 4;
+  min-width: 0;
+}
+
+.completion-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.completion-pct {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4A90D9;
+}
+
+.completion-label {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+/* Rating Bar Chart (SVG) */
+.rating-bar-svg {
+  display: block;
+  margin: 0 auto;
+}
+
 /* Clock Legend */
 .clock-legend {
   display: flex;
@@ -1268,6 +1321,22 @@ body.dark .clock-toggle {
 
 body.dark .clock-legend-item {
   color: #999;
+}
+
+body.dark .completion-pct {
+  color: #6AB0F3;
+}
+
+body.dark .completion-label {
+  color: #777;
+}
+
+body.dark .rating-bar-svg text {
+  fill: #888;
+}
+
+body.dark .rating-bar-svg line {
+  stroke: #444;
 }
 
 body.dark .weekly-table th {
@@ -1926,7 +1995,22 @@ body.dark .notion-toggle {
     font-size: 0.9rem;
   }
 
-  /* Clock legend mobile */
+  /* Clock & completion mobile */
+  .clock-and-progress {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .clock-chart svg {
+    width: 220px;
+    height: 220px;
+  }
+
+  .completion-pct {
+    font-size: 1.3rem;
+  }
+
+
   .clock-legend {
     gap: 6px;
   }
